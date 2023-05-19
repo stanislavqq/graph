@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart</title>
+</head>
+<body>
+<div>
+    <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+
+<script>
+    let labels = [];
+    let datasets = [];
+
+    axios.get("http://127.0.0.1:8000/getChart")
+        .then(function (response) {
+            console.log(response.data);
+            if (response.data.labels) {
+                labels = response.data.labels
+            }
+
+            if (response.data.datasets) {
+                datasets = response.data.datasets
+            }
+
+            createChart(labels, datasets)
+        })
+        .catch(function (error) {
+            console.log(error);
+        })
+        .finally(function () {
+            // always executed
+        });
+
+    const ctx = document.getElementById('myChart');
+
+    function createChart(labels, datasets) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: datasets[0].Label,
+                    data: datasets[0].Values,
+                    borderWidth: 2,
+                    borderColor: '#36A2EB',
+                    backgroundColor: '#9BD0F5',
+                },
+                    {
+                        label: datasets[1].Label,
+                        data: datasets[1].Values,
+                        borderWidth: 2,
+                        borderColor: '#FF6384',
+                        backgroundColor: '#FFB1C1',
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
