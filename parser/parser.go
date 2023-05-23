@@ -8,11 +8,19 @@ import (
 	"os"
 )
 
+//go:generate mockgen -source=parser.go -destination mocks/parser.go -package mocks parser
 type Parser interface {
-	Parse(fileName string) map[int][]string
+	Parse(fileName string) (map[int][]string, error)
+	SetSkipRows(num int) Parser
 }
 
 type CSVParser struct {
+	SkipRowsCount int
+}
+
+func (p *CSVParser) SetSkipRows(num int) Parser {
+	p.SkipRowsCount = num
+	return p
 }
 
 func NewParser(parserType string) (Parser, error) {
@@ -23,10 +31,10 @@ func NewParser(parserType string) (Parser, error) {
 	return nil, errors.New(fmt.Sprintf("Parser type \"%s\" is not available", parserType))
 }
 
-func (p *CSVParser) Parse(fileName string) map[int][]string {
+func (p *CSVParser) Parse(fileName string) (map[int][]string, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -36,11 +44,20 @@ func (p *CSVParser) Parse(fileName string) map[int][]string {
 
 	result := make(map[int][]string)
 
+	slipCount := 0
+	if p.SkipRowsCount > 0 {
+		slipCount = p.SkipRowsCount
+	}
+
 	i := 0
 	for {
 		record, e := reader.Read()
-		if e != nil {
+		if slipCount > 0 {
+			slipCount--
+			continue
+		}
 
+		if e != nil {
 			if e.Error() == "EOF" {
 				break
 			}
@@ -52,5 +69,5 @@ func (p *CSVParser) Parse(fileName string) map[int][]string {
 		i++
 	}
 
-	return result
+	return result, nil
 }

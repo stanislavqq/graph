@@ -1,59 +1,45 @@
 package server
 
 import (
-	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
-	"graph/app"
-	"log"
+	"github.com/rs/zerolog"
+	"graph/config"
 	"net/http"
 	"time"
 )
 
 type Server struct {
-	Router *mux.Router
+	Router     *mux.Router
+	Logger     zerolog.Logger
+	HttpConfig config.HttpConfig
 }
 
-func New() *Server {
+func New(cfg config.HttpConfig, logger zerolog.Logger) *Server {
 	srv := &Server{
-		Router: mux.NewRouter(),
+		Router:     mux.NewRouter(),
+		Logger:     logger,
+		HttpConfig: cfg,
 	}
 
-	srv.Router.HandleFunc("/getChart", chartHandler).Methods("GET")
-	srv.Router.HandleFunc("/", homeHandler).Methods("GET")
+	//srv.Router.HandleFunc("/getChart", chartHandler).Methods("GET")
+	//srv.Router.HandleFunc("/", homeHandler).Methods("GET")
 
 	return srv
 }
 
-func (s *Server) Start() {
-
-	//http.Handle("/", router)
-
+func (s *Server) Start() error {
 	srv := &http.Server{
-		Handler: s.Router,
-		Addr:    "127.0.0.1:8000",
-		// Good practice: enforce timeouts for servers you create!
+		Handler:      s.Router,
+		Addr:         fmt.Sprintf("%s:%s", s.HttpConfig.Host, s.HttpConfig.Port),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
 
-	err := srv.ListenAndServe()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./index.html")
-}
-
-func chartHandler(w http.ResponseWriter, r *http.Request) {
-	MoneyChart := app.NewChart()
-	w.Header().Set("Content-Type", "application/json")
-	data := map[string]any{
-		"labels":   MoneyChart.GetLabels(),
-		"datasets": MoneyChart.GetDatasets(),
+	if err := srv.ListenAndServe(); err != nil {
+		s.Logger.Fatal().Err(err)
+		return err
 	}
 
-	json.NewEncoder(w).Encode(data)
+	return nil
 }

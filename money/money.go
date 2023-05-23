@@ -5,6 +5,7 @@ import (
 )
 
 type MoneyRow struct {
+	ID                        int
 	Date                      time.Time
 	CategoryName              string
 	Payee                     string
@@ -17,14 +18,15 @@ type MoneyRow struct {
 	IncomeCurrencyShortTitle  string
 	CreatedDate               time.Time
 	ChangedDate               time.Time
+	Cost                      float64
 }
 
-func New() MoneyRow {
+func NewMoneyRow() MoneyRow {
 	return MoneyRow{}
 }
 
 func NewFromRow(row []string) MoneyRow {
-	moneyRow := New()
+	moneyRow := NewMoneyRow()
 
 	for index, val := range row {
 		switch index {
@@ -55,10 +57,35 @@ func NewFromRow(row []string) MoneyRow {
 		default:
 			panic("default call")
 		}
+
+		if moneyRow.IsIncome() {
+			moneyRow.Cost = moneyRow.Income
+		} else if moneyRow.IsOutcome() {
+			moneyRow.Cost = moneyRow.Outcome
+		}
 	}
 
 	return moneyRow
 }
+
+func (m *MoneyRow) GetID() int {
+	return m.ID
+}
+
+func (m *MoneyRow) setID(id int) *MoneyRow {
+	m.ID = id
+	return m
+}
+
+func (m *MoneyRow) SetCost(value float64) *MoneyRow {
+	m.Cost = value
+	return m
+}
+
+func (m *MoneyRow) GetCost() float64 {
+	return m.Cost
+}
+
 func (m *MoneyRow) SetOutcomeAccountName(value string) *MoneyRow {
 	m.OutcomeAccountName = value
 	return m
