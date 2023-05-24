@@ -16,7 +16,8 @@
     let labels = [];
     let datasets = [];
 
-    axios.get("http://127.0.0.1:8000/getChart")
+    console.log(window.location);
+    axios.get("http://"+window.location.host+"/getChart")
         .then(function (response) {
             console.log(response.data);
             if (response.data.labels) {
@@ -43,19 +44,22 @@
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: datasets[0].Label,
-                    data: datasets[0].Values,
-                    borderWidth: 2,
-                    borderColor: '#36A2EB',
-                    backgroundColor: '#9BD0F5',
-                },
+                datasets: [
+                    {
+                        label: datasets[0].Label,
+                        data: datasets[0].Values,
+                        borderWidth: 2,
+                        borderColor: '#36A2EB',
+                        backgroundColor: '#9BD0F5',
+                        tension: 0.3
+                    },
                     {
                         label: datasets[1].Label,
                         data: datasets[1].Values,
-                        borderWidth: 2,
+                        borderWidth: 1,
                         borderColor: '#FF6384',
                         backgroundColor: '#FFB1C1',
+                        tension: 0.3
                     }
                 ]
             },
